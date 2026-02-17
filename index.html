@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloxNews - Portal de Notícias Roblox</title>
+    <!-- Fontes futuristas para combinar com o estilo Roblox/Gaming -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0f0f13;
+            --bg-card: #1a1a20;
+            --roblox-red: #e2231a;
+            --roblox-blue: #00b06f;
+            --neon-blue: #00a2ff;
+            --text-main: #ffffff;
+            --text-sec: #b0b0b0;
+            --admin-gold: #ffcc00;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            padding-bottom: 50px;
+        }
+
+        /* --- CABEÇALHO --- */
+        header {
+            background: rgba(15, 15, 19, 0.95);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--roblox-red);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(226, 35, 26, 0.2);
+        }
+
+        .logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo span { color: var(--roblox-red); }
+
+        .admin-btn {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .admin-btn:hover { background: var(--neon-blue); color: #000; }
+
+        /* --- ÁREA ADMIN --- */
+        #adminPanel {
+            display: none; /* Escondido até logar */
+            background: #222;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+        #adminPanel.active { display: block; }
+        
+        .btn-create {
+            background: var(--roblox-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 176, 111, 0.4);
+        }
+
+        /* --- HERO --- */
+        .hero {
+            text-align: center;
+            padding: 3rem 1rem;
+            background: linear-gradient(180deg, rgba(226,35,26,0.1) 0%, transparent 100%);
+        }
+        .hero h1 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- GRID DE NOTÍCIAS --- */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border-color: var(--neon-blue);
+        }
+
+        .card-img-container {
+            width: 100%;
+            height: 180px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .category-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: var(--neon-blue);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 1px solid var(--neon-blue);
+        }
+
+        .card-body { padding: 1.5rem; }
+        .card-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+        .card-text {
+            color: var(--text-sec);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        /* --- BOTÕES DE EDIÇÃO (ADMIN) --- */
+        .admin-actions {
+            display: none; /* Só aparece se for admin */
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            gap: 10px;
+        }
+        .card.admin-mode .admin-actions { display: flex; }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .btn-edit { background: #333; color: var(--admin-gold); border: 1px solid var(--admin-gold); }
+        .btn-delete { background: #333; color: var(--roblox-red); border: 1px solid var(--roblox-red); }
+        .btn-edit:hover { background: var(--admin-gold); color: #000; }
+        .btn-delete:hover { background: var(--roblox-red); color: white; }
+
+        /* --- MODAIS --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #333;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 5px; color: var(--text-sec); font-size: 0.9rem; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: #0f0f13;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 6px;
+            outline: none;
+        }
+        .form-group input:focus { border-color: var(--neon-blue); }
+
+        .modal-footer {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-cancel { background: transparent; border: 1px solid #555; color: #fff; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+        .btn-save { background: var(--neon-blue); border: none; color: #000; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <!-- CABEÇALHO -->
+    <header>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--roblox-red)"><path d="M4 4h16v16H4z" stroke="white" stroke-width="2"/></svg>
+            Blox<span>News</span>
+        </div>
+        <button class="admin-btn" id="loginBtn" onclick="openModal('loginModal')">Admin Login</button>
+        <button class="admin-btn" id="logoutBtn" onclick="logout()" style="display:none; border-color: var(--roblox-red); color: var(--roblox-red);">Sair</button>
+    </header>
+
+    <!-- PAINEL DO ADMIN (Só aparece logado) -->
+    <div id="adminPanel">
+        <h3 style="color: var(--admin-gold); margin-bottom: 10px;">Modo Administrador Ativo</h3>
+        <button class="btn-create" onclick="openCreateModal()">+ Criar Nova Notícia</button>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <h1>Fique por dentro do Roblox</h1>
+        <p style="color: var(--text-sec);">Atualizações, glitches, trends e notícias do universo dos blocks.</p>
+    </section>
+
+    <!-- GRID DE NOTÍCIAS -->
+    <main class="news-grid" id="newsGrid">
+        <!-- O conteúdo será gerado pelo JavaScript -->
+    </main>
+
+    <!-- MODAL DE LOGIN -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Acesso Admin</span>
+                <span style="cursor:pointer" onclick="closeModal('loginModal')">&times;</span>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="adminPass" placeholder="Digite a senha...">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save" onclick="checkLogin()">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO / CRIAÇÃO -->
+    <div class="modal" id="editorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span id="editorTitle">Editar Notícia</span>
+                <span style="cursor:pointer" onclick="closeModal('editorModal')">&times;</span>
+            </div>
+            <input type="hidden" id="editId">
+            
+            <div class="form-group">
+                <label>Título da Manchete</label>
+                <input type="text" id="newsTitle" placeholder="Ex: Novo Update do Blox Fruits">
+            </div>
+
+            <div class="form-group">
+                <label>Categoria</label>
+                <select id="newsCategory">
+                    <option value="Update">Update</option>
+                    <option value="Glitch">Glitch</option>
+                    <option value="Trend">Em Alta</option>
+                    <option value="Evento">Evento</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Link da Imagem (URL)</label>
+                <input type="text" id="newsImage" placeholder="https://exemplo.com/foto.jpg">
+                <small style="color: #666; font-size: 0.7rem;">Use links diretos de imagens (jpg/png).</small>
+            </div>
+
+            <div class="form-group">
+                <label>Texto da Matéria</label>
+                <textarea id="newsContent" rows="4" placeholder="Escreva os detalhes da notícia aqui..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('editorModal')">Cancelar</button>
+                <button class="btn-save" onclick="saveNews()">Salvar Notícia</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DADOS PADRÃO (Se for a primeira vez que abre) ---
+        const defaultNews = [
+            {
+                id: 1,
+                title: "Blox Fruits: Nova Ilha Descoberta",
+                category: "Update",
+                image: "https://picsum.photos/seed/blox1/400/250",
+                content: "Os desenvolvedores confirmaram a adição de uma ilha misteriosa no Sea 3. Frutas legendárias estão spawnando com mais frequência lá!"
+            },
+            {
+                id: 2,
+                title: "Glitch do Passe de Batalha",
+                category: "Glitch",
+                image: "https://picsum.photos/seed/roblox2/400/250",
+                content: "Jogadores relataram um bug que permite pegar recompensas grátis do passe atual. A correção deve vir na próxima patch note."
+            },
+            {
+                id: 3,
+                title: "Adopt Me! Pet Raro",
+                category: "Trend",
+                image: "https://picsum.photos/seed/adopt/400/250",
+                content: "Um novo animal de estimação com animações exclusivas acabou de lançar e já vale milhões de moedas no jogo."
+            }
+        ];
+
+        // --- ESTADO DA APLICAÇÃO ---
+        let newsData = JSON.parse(localStorage.getItem('bloxNewsData')) || defaultNews;
+        let isAdmin = false;
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO ---
+        function renderNews() {
+            const grid = document.getElementById('newsGrid');
+            grid.innerHTML = '';
+
+            newsData.forEach(item => {
+                // Se for imagem quebrada, usa placeholder
+                const imgSrc = item.image ? item.image : `https://picsum.photos/seed/${item.id}/400/250`;
+                
+                const card = document.createElement('article');
+                card.className = `card ${isAdmin ? 'admin-mode' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="card-img-container">
+                        <span class="category-tag">${item.category}</span>
+                        <img src="${imgSrc}" class="card-img" alt="${item.title}" onerror="this.src='https://picsum.photos/seed/error/400/250'">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">${item.title}</h3>
+                        <p class="card-text">${item.content}</p>
+                        
+                        <div class="admin-actions">
+                            <button class="action-btn btn-edit" onclick="openEditModal(${item.id})">Editar</button>
+                            <button class="action-btn btn-delete" onclick="deleteNews(${item.id})">Excluir</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- SISTEMA DE LOGIN ---
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function checkLogin() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === 'roblox123') {
+                isAdmin = true;
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'block';
+                document.getElementById('adminPanel').classList.add('active');
+                closeModal('loginModal');
+                renderNews(); // Re-renderiza para mostrar botões de editar
+                alert('Bem-vindo, Admin!');
+            } else {
+                alert('Senha incorreta!');
+            }
+        }
+
+        function logout() {
+            isAdmin = false;
+            location.reload(); // Recarrega para limpar o estado visual
+        }
+
+        // --- FUNÇÕES DE CRIAR/EDITAR/EXCLUIR ---
+
+        // Abrir modal para CRIAR
+        function openCreateModal() {
+            document.getElementById('editorTitle').innerText = "Criar Nova Notícia";
+            document.getElementById('editId').value = ""; // ID vazio indica criação
+            document.getElementById('newsTitle').value = "";
+            document.getElementById('newsCategory').value = "Update";
+            document.getElementById('newsImage').value = "";
+            document.getElementById('newsContent').value = "";
+            openModal('editorModal');
+        }
+
+        // Abrir modal para EDITAR
+        function openEditModal(id) {
+            const item = newsData.find(n => n.id === id);
+            if (!item) return;
+
+            document.getElementById('editorTitle').innerText = "Editar Notícia #" + id;
+            document.getElementById('editId').value = item.id;
+            document.getElementById('newsTitle').value = item.title;
+            document.getElementById('newsCategory').value = item.category;
+            document.getElementById('newsImage').value = item.image;
+            document.getElementById('newsContent').value = item.content;
+            openModal('editorModal');
+        }
+
+        // Salvar (Tanto criar quanto editar)
+        function saveNews() {
+            const id = document.getElementById('editId').value;
+            const title = document.getElementById('newsTitle').value;
+            const category = document.getElementById('newsCategory').value;
+            const image = document.getElementById('newsImage').value;
+            const content = document.getElementById('newsContent').value;
+
+            if (!title || !content) {
+                alert("Preencha pelo menos o título e o conteúdo.");
+                return;
+            }
+
+            if (id) {
+                // EDITAR existente
+                const index = newsData.findIndex(n => n.id == id);
+                if (index !== -1) {
+                    newsData[index] = { ...newsData[index], title, category, image, content };
+                }
+            } else {
+                // CRIAR nova
+                const newId = Date.now(); // Gera ID único baseado no tempo
+                newsData.unshift({
+                    id: newId,
+                    title,
+                    category,
+                    image,
+                    content
+                });
+            }
+
+            // Salvar no navegador e atualizar tela
+            localStorage.setItem('bloxNewsData', JSON.stringify(newsData));
+            renderNews();
+            closeModal('editorModal');
+        }
+
+        // Excluir
+        function deleteNews(id) {
+            if (confirm("Tem certeza que deseja excluir esta notícia?")) {
+                newsData = newsData.filter(n => n.id !== id);
+                localStorage.setItem('bloxNewsData', JSON.stringify(newsData));
+                renderNews();
+            }
+        }
+
+        // Inicializa o site
+        renderNews();
+
+    </script>
+</body>
+</html>
